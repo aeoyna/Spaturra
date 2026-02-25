@@ -539,6 +539,15 @@ class Game {
             this.particles.push(new Particle(this, this.player.x + this.player.width / 2, this.player.y + this.player.height / 2, 'spark', '#00ffcc'));
         }
 
+        if (this.player.barrierActive) {
+            this.player.barrierHp--;
+            this.player.invulnerableTimer = 30; // Half sec i-frames for barrier hit
+            if (this.player.barrierHp <= 0) {
+                this.player.barrierActive = false;
+            }
+            return; // Shield absorbed damage
+        }
+
         this.player.firePower--; // Lose one ship
         this.livesElement.innerText = `Ships: ${this.player.firePower}`; // Update HUD
         // Reset powerups

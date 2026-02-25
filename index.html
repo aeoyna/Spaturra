@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Gradius Clone</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
     <link rel="stylesheet" href="css/style.css?v=63">
     <script>
         window.onerror = function (msg, url, lineNo, columnNo, error) {
@@ -57,6 +59,17 @@
     <script src="js/option.js?v=63"></script>
     <script src="js/game.js?v=63"></script>
     <script src="js/main.js?v=63"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(reg => {
+                    console.log('SW registered:', reg);
+                }).catch(err => {
+                    console.log('SW registration failed:', err);
+                });
+            });
+        }
+    </script>
 </body>
 
 </html>

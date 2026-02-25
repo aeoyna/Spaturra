@@ -16,9 +16,6 @@ class Player {
 
         // Health (now represented by firePower/number of ships)
         this.invulnerableTimer = 0; // i-frames
-        this.tilt = 0; // -1 to 1 for rotation
-        this.rotationSpeed = 0.1;
-        this.maxTilt = 0.3; // Limit in radians
         this.engineFlameScale = 1;
         this.engineTimer = 0;
 
@@ -217,28 +214,22 @@ class Player {
             if (Math.abs(dx) > 2) {
                 const move = Math.sign(dx) * Math.min(Math.abs(dx), touchSpeed);
                 this.centerX += move;
-                this.tilt = Math.max(-this.maxTilt, Math.min(this.maxTilt, -move / touchSpeed * this.maxTilt));
             } else {
                 this.centerX = targetX;
-                this.tilt *= 0.8;
             }
             // Clamp to screen bounds
             this.centerX = Math.max(-bounds.minDx, Math.min(this.game.width - bounds.maxDx, this.centerX));
         } else if (movingLeft && (this.centerX + bounds.minDx) > 0) {
             // Keyboard movement
             this.centerX -= this.speed;
-            this.tilt = Math.min(this.maxTilt, this.tilt + this.rotationSpeed);
         } else if (movingRight && (this.centerX + bounds.maxDx) < this.game.width) {
             this.centerX += this.speed;
-            this.tilt = Math.max(-this.maxTilt, this.tilt - this.rotationSpeed);
         } else if (autoDodge === -1 && (this.centerX + bounds.minDx) > 0) {
             // Auto-dodge left
             this.centerX -= this.speed;
-            this.tilt = Math.min(this.maxTilt, this.tilt + this.rotationSpeed);
         } else if (autoDodge === 1 && (this.centerX + bounds.maxDx) < this.game.width) {
             // Auto-dodge right
             this.centerX += this.speed;
-            this.tilt = Math.max(-this.maxTilt, this.tilt - this.rotationSpeed);
         } else if (autoTargetX !== null) {
             // Auto-target: glide toward enemy or power-up
             const dx = autoTargetX - this.centerX;
@@ -246,20 +237,9 @@ class Player {
                 const dir = Math.sign(dx);
                 if (dir === -1 && (this.centerX + bounds.minDx) > 0) {
                     this.centerX -= this.speed;
-                    this.tilt = Math.min(this.maxTilt, this.tilt + this.rotationSpeed);
                 } else if (dir === 1 && (this.centerX + bounds.maxDx) < this.game.width) {
                     this.centerX += this.speed;
-                    this.tilt = Math.max(-this.maxTilt, this.tilt - this.rotationSpeed);
                 }
-            } else {
-                this.tilt *= 0.8; // Steady on target
-            }
-        } else {
-            // Gradually return to no tilt
-            if (this.tilt > 0) {
-                this.tilt = Math.max(0, this.tilt - this.rotationSpeed);
-            } else if (this.tilt < 0) {
-                this.tilt = Math.min(0, this.tilt + this.rotationSpeed);
             }
         }
 
@@ -516,7 +496,6 @@ class Player {
     drawSingleShip(ctx, x, y) {
         ctx.save();
         ctx.translate(x, y);
-        ctx.rotate(this.tilt);
 
         // Apply invulnerability flicker
         if (this.invulnerableTimer > 0 && Math.floor(Date.now() / 100) % 2 === 0) {

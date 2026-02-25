@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Gradius Clone</title>
+    <link rel="stylesheet" href="css/style.css?v=63">
+    <script>
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+            const errDiv = document.createElement('div');
+            errDiv.style.position = 'absolute';
+            errDiv.style.top = '10px';
+            errDiv.style.left = '10px';
+            errDiv.style.color = 'red';
+            errDiv.style.backgroundColor = 'rgba(0,0,0,0.8)';
+            errDiv.style.zIndex = '9999';
+            errDiv.style.padding = '10px';
+            errDiv.innerText = `Error: ${msg} \nLine: ${lineNo}`;
+            document.body.appendChild(errDiv);
+            return false;
+        };
+    </script>
+</head>
+
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="450" height="800"></canvas>
+        <div id="ui-layer">
+            <div id="score-display">Score: 0</div>
+            <div id="start-screen" class="overlay">
+                <p>Advanced Agentic Coding Presents</p>
+                <h1>GRADIUS</h1>
+                <p>Enhanced Anime Edition</p>
+                <button id="start-button" class="btn-start">Start Mission</button>
+                <p>Touch &amp; Drag to Move | Auto-Fire On<br>PC: Arrow Keys / A-D</p>
+            </div>
+            <div id="game-over-screen" class="overlay hidden">
+                <h1>GAME OVER</h1>
+                <p>Final Score: <span id="final-score">0</span></p>
+                <p>Press Enter to Restart</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/audio.js?v=63"></script>
+    <script src="js/input.js?v=63"></script>
+    <script src="js/bullet.js?v=63"></script>
+    <script src="js/player.js?v=63"></script>
+    <script src="js/enemy.js?v=63"></script>
+    <script src="js/obstacle.js?v=63"></script>
+    <script src="js/gate.js?v=63"></script>
+    <script src="js/barrel.js?v=63"></script>
+    <script src="js/background.js?v=63"></script>
+    <script src="js/particle.js?v=63"></script>
+    <script src="js/option.js?v=63"></script>
+    <script src="js/game.js?v=63"></script>
+    <script src="js/main.js?v=63"></script>
+</body>
+
+</html>

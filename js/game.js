@@ -449,7 +449,7 @@ class Game {
                             if (this.player.firePower > 10) this.player.firePower = 10;
                         }
                     }
-                    this.livesElement.innerText = `Ships: ${this.player.firePower}`;
+                    this.updateLivesHUD();
                 }
             }
         });
@@ -522,7 +522,7 @@ class Game {
                             break;
                     }
                     this.scoreElement.innerText = `Score: ${this.score}`;
-                    this.livesElement.innerText = `Ships: ${this.player.firePower}`; // Sync lives with HUD
+                    this.updateLivesHUD(); // Sync lives with HUD
                 }
             }
         });
@@ -549,7 +549,7 @@ class Game {
         }
 
         this.player.firePower--; // Lose one ship
-        this.livesElement.innerText = `Ships: ${this.player.firePower}`; // Update HUD
+        this.updateLivesHUD(); // Update HUD with icons
         // Reset powerups
         this.player.weaponType = 'normal';
         this.player.missileEnabled = false;
@@ -567,5 +567,15 @@ class Game {
         this.gameOver = true;
         this.gameOverScreen.classList.remove('hidden');
         this.finalScoreElement.innerText = this.score;
+    }
+
+    updateLivesHUD() {
+        if (!this.livesElement) return;
+        this.livesElement.innerHTML = '';
+        for (let i = 0; i < this.player.firePower; i++) {
+            const shipIcon = document.createElement('div');
+            shipIcon.className = 'life-ship';
+            this.livesElement.appendChild(shipIcon);
+        }
     }
 }

@@ -24,6 +24,7 @@ window.addEventListener('load', () => {
     function initGame() {
         audioManager.init(); // Initialize audio context on user gesture
         game = new Game(canvas.width, canvas.height, audioManager);
+        game.updateLivesHUD(); // Initial HUD render
         scoreElement.innerText = 'Score: 0';
         isPlaying = true;
 

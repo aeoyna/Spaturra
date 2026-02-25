@@ -66,11 +66,18 @@ canvas {
     position: absolute;
     top: 20px;
     right: 20px;
-    font-size: 28px;
-    font-weight: 900;
-    letter-spacing: 2px;
-    color: var(--text-color);
-    text-shadow: 0 0 10px var(--secondary-color);
+    display: flex;
+    gap: 8px;
+}
+
+.life-ship {
+    width: 32px;
+    height: 32px;
+    background-image: url('../icons/icon-192.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    filter: drop-shadow(0 0 5px var(--primary-color)) brightness(1.2);
+    /* Make it look more like a silhouette/icon */
 }
 
 .overlay {

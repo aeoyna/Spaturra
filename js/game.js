@@ -39,6 +39,7 @@ class Game {
         this.gameOver = false;
 
         this.scoreElement = document.getElementById('score-display');
+        this.livesElement = document.getElementById('lives-display'); // New HUD element
         this.gameOverScreen = document.getElementById('game-over-screen');
         this.finalScoreElement = document.getElementById('final-score');
     }
@@ -448,6 +449,7 @@ class Game {
                             if (this.player.firePower > 10) this.player.firePower = 10;
                         }
                     }
+                    this.livesElement.innerText = `Ships: ${this.player.firePower}`;
                 }
             }
         });
@@ -520,6 +522,7 @@ class Game {
                             break;
                     }
                     this.scoreElement.innerText = `Score: ${this.score}`;
+                    this.livesElement.innerText = `Ships: ${this.player.firePower}`; // Sync lives with HUD
                 }
             }
         });
@@ -536,16 +539,8 @@ class Game {
             this.particles.push(new Particle(this, this.player.x + this.player.width / 2, this.player.y + this.player.height / 2, 'spark', '#00ffcc'));
         }
 
-        if (this.player.barrierActive) {
-            this.player.barrierHp--;
-            this.player.invulnerableTimer = 30; // Half sec i-frames for barrier hit
-            if (this.player.barrierHp <= 0) {
-                this.player.barrierActive = false;
-            }
-            return; // Shield absorbed damage
-        }
-
         this.player.firePower--; // Lose one ship
+        this.livesElement.innerText = `Ships: ${this.player.firePower}`; // Update HUD
         // Reset powerups
         this.player.weaponType = 'normal';
         this.player.missileEnabled = false;

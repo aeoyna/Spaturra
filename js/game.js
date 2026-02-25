@@ -549,9 +549,11 @@ class Game {
             return; // Shield absorbed damage
         }
 
-        this.player.firePower--; // Lose one ship
-        this.updateLivesHUD(); // Update HUD with icons
-        // Reset powerups
+        this.lives--; // Lose one life
+        this.updateLivesHUD(); // Update HUD icons based on lives
+
+        // Reset fleet and powerups
+        this.player.firePower = 1;
         this.player.weaponType = 'normal';
         this.player.missileEnabled = false;
         this.player.speedLevel = 0;
@@ -559,7 +561,7 @@ class Game {
 
         this.player.invulnerableTimer = 60; // 1 second of invulnerability at 60fps
 
-        if (this.player.firePower <= 0) {
+        if (this.lives <= 0) {
             this.triggerGameOver();
         }
     }

@@ -12,7 +12,7 @@ class Player {
         this.shootTimer = 0;
         this.shootInterval = 10; // Frames between shots
 
-        this.firePower = 3; // Starting ships
+        this.firePower = 1; // Starting fleet size
 
         // Health (now represented by firePower/number of ships)
         this.invulnerableTimer = 0; // i-frames

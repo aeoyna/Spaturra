@@ -36,6 +36,7 @@ class Game {
         this.obstacleSpawnInterval = 400; // Less frequent than barrels
 
         this.score = 0;
+        this.lives = 3; // Total lives (respawns)
         this.gameOver = false;
 
         this.scoreElement = document.getElementById('score-display');
@@ -449,7 +450,6 @@ class Game {
                             if (this.player.firePower > 10) this.player.firePower = 10;
                         }
                     }
-                    this.updateLivesHUD();
                 }
             }
         });
@@ -522,7 +522,8 @@ class Game {
                             break;
                     }
                     this.scoreElement.innerText = `Score: ${this.score}`;
-                    this.updateLivesHUD(); // Sync lives with HUD
+                    // Fleet changed, but lives haven't. No updateLivesHUD needed here if it's only for lives.
+                    // Wait, if the user wants "ship silhouettes" in top right to be lives, then we DON'T update it when fleet grows.
                 }
             }
         });
@@ -572,7 +573,7 @@ class Game {
     updateLivesHUD() {
         if (!this.livesElement) return;
         this.livesElement.innerHTML = '';
-        for (let i = 0; i < this.player.firePower; i++) {
+        for (let i = 0; i < this.lives; i++) {
             const shipIcon = document.createElement('div');
             shipIcon.className = 'life-ship';
             this.livesElement.appendChild(shipIcon);

@@ -41,6 +41,12 @@ window.addEventListener('load', () => {
             animationId = requestAnimationFrame(animate);
         } else {
             isPlaying = false;
+            // Auto-restart after 2 seconds
+            setTimeout(() => {
+                if (!isPlaying) {
+                    initGame();
+                }
+            }, 2000);
             return; // Stop processing frame if game over
         }
 

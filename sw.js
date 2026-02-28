@@ -1,8 +1,9 @@
-const CACHE_NAME = 'gradius-v5';
+const CACHE_NAME = 'gradius-v6';
 const ASSETS = [
     './',
     './index.html',
     './css/style.css',
+    './js/tikfinity.js',
     './js/main.js',
     './js/game.js',
     './js/player.js',

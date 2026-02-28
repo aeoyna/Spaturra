@@ -16,12 +16,11 @@ class Game {
         this.particles = []; // For explosions if time permits
         this.powerUps = []; // Option powerups
 
-        this.finalBossSpawned = false;
-        this.finalBossSpawnMilestone = 10000;
-
         this.enemySpawnTimer = 0;
-        this.enemySpawnInterval = 20; // 3 enemies per second at 60fps (much faster swarm)
+        this.enemySpawnInterval = 20;
         this.midbossSpawnMilestone = 1500;
+        this.bossIndex = 0;
+        this.bossClasses = [BeamBoss, BombBoss, MirrorBoss, CloudBoss, DesariumBoss];
 
         this.shakeDuration = 0;
         this.shakeMagnitude = 0;
@@ -55,6 +54,7 @@ class Game {
         this.bullets.forEach(bullet => bullet.update());
         this.bullets = this.bullets.filter(bullet => !bullet.markedForDeletion);
 
+        /* DISABLED: Exclusive Gift-Driven Mode
         // Spawn enemies (with per-type caps)
         this.enemySpawnTimer++;
         if (this.enemySpawnTimer > this.enemySpawnInterval) {
@@ -82,30 +82,26 @@ class Game {
             }
         }
 
-        // Spawn MidBoss based on score
-        if (this.score >= this.midbossSpawnMilestone && this.midbosses.length === 0 && !this.finalBossSpawned) {
-            this.midbosses.push(new MidBoss(this));
-            this.midbossSpawnMilestone = this.score + 3000; // Next one is 3000 points AFTER the current score
+        // Spawn Boss based on score milestone
+        if (this.score >= this.midbossSpawnMilestone && this.midbosses.length === 0) {
+            let BossClass = this.bossClasses[this.bossIndex % this.bossClasses.length];
+            this.midbosses.push(new BossClass(this));
+            this.bossIndex++;
+            this.midbossSpawnMilestone = this.score + 5000; // Next boss after 5000 points
         }
+        */
 
-        // Spawn Final Boss
-        if (this.score >= this.finalBossSpawnMilestone && !this.finalBossSpawned) {
-            this.finalBossSpawned = true;
-            let fb = new FinalBoss(this);
-            fb.isFinalBoss = true; // Use a flag for easy checking
-            this.midbosses.push(fb);
-        }
-
-        // Spawn Gates
+        // Spawn Gates (Keep Automatic - Only Buffs)
         this.gateSpawnTimer++;
         if (this.gateSpawnTimer > this.gateSpawnInterval) {
-            let modifiers = ['x2', 'x3', '-1', '-2']; // Mix of buff and debuff gates
+            let modifiers = ['x2', '+1', '+2']; // Downgraded progression
             let mod = modifiers[Math.floor(Math.random() * modifiers.length)];
             let xPos = Math.random() * (this.width - 120); // Gate width is 120
             this.gates.push(new Gate(this, xPos, mod));
             this.gateSpawnTimer = 0;
         }
 
+        /* DISABLED: Exclusive Gift-Driven Mode
         // Spawn Barrels
         this.barrelSpawnTimer++;
         if (this.barrelSpawnTimer > this.barrelSpawnInterval) {
@@ -119,6 +115,7 @@ class Game {
             this.obstacles.push(new Obstacle(this));
             this.obstacleSpawnTimer = 0;
         }
+        */
 
         // Update enemies
         this.enemies.forEach(enemy => enemy.update());
@@ -214,33 +211,41 @@ class Game {
                         }
                     }
                 });
-                // Check MidBosses
+                // Check Bosses (midbosses array covers all new bosses)
                 this.midbosses.forEach(mb => {
                     if (!bullet.markedForDeletion && !mb.markedForDeletion) {
+                        // Special check for CloudBoss barriers
+                        if (mb instanceof CloudBoss) {
+                            let hitCloud = false;
+                            mb.clouds.forEach(c => {
+                                if (checkRectCollision(bullet, c)) {
+                                    bullet.markedForDeletion = true;
+                                    hitCloud = true;
+                                    this.particles.push(new Particle(this, bullet.x, bullet.y, 'smoke'));
+                                }
+                            });
+                            if (hitCloud) return;
+                        }
+
                         if (checkRectCollision(bullet, mb)) {
+                            // Don't damage Desarium if in stealth
+                            if (mb instanceof DesariumBoss && mb.stealth) return;
+
                             bullet.pierceCount--;
                             if (bullet.pierceCount <= 0) bullet.markedForDeletion = true;
 
                             mb.hp--;
-                            mb.hitTimer = 3; // Flash white for 3 frames
+                            mb.hitTimer = 3;
                             if (mb.hp <= 0) {
                                 mb.markedForDeletion = true;
-                                this.score += mb.isFinalBoss ? 5000 : 1000; // High score for boss
+                                this.score += 2000;
                                 this.scoreElement.innerText = `Score: ${this.score}`;
 
-                                if (mb.isFinalBoss) {
-                                    this.finalBossSpawned = false;
-                                    this.finalBossSpawnMilestone += 10000;
-                                }
-
-                                // Huge Explosion & Shake
                                 this.triggerShake(20, 10);
                                 this.audio.playExplosion();
                                 let cx = mb.x + mb.width / 2;
                                 let cy = mb.y + mb.height / 2;
                                 for (let i = 0; i < 20; i++) this.particles.push(new Particle(this, cx, cy, 'explosion', '#ff0000'));
-                                for (let i = 0; i < 20; i++) this.particles.push(new Particle(this, cx, cy, 'spark', '#ffff00'));
-                                for (let i = 0; i < 10; i++) this.particles.push(new Particle(this, cx, cy, 'smoke'));
                             }
                         }
                     }
@@ -444,11 +449,16 @@ class Game {
                             this.triggerGameOver();
                         }
                     } else {
-                        let multiplier = parseInt(gate.modifier.substring(1), 10); // e.g. 2 -> "x2".substring(1)
-                        if (this.player.firePower < 10) {
-                            this.player.firePower = this.player.firePower * multiplier;
-                            if (this.player.firePower > 10) this.player.firePower = 10;
+                        if (gate.modifier.startsWith('x')) {
+                            let multiplier = parseInt(gate.modifier.substring(1), 10);
+                            this.player.firePower *= multiplier;
+                        } else if (gate.modifier.startsWith('+')) {
+                            let add = parseInt(gate.modifier.substring(1), 10);
+                            this.player.firePower += add;
                         }
+
+                        // Cap at 10
+                        if (this.player.firePower > 10) this.player.firePower = 10;
                     }
                 }
             }
@@ -549,17 +559,12 @@ class Game {
             return; // Shield absorbed damage
         }
 
-        this.lives--; // Lose one life
-        this.updateLivesHUD(); // Update HUD icons based on lives
+        // Always lose a life, but DO NOT reset ships (firePower), weapons, or speed
+        this.lives--;
+        this.updateLivesHUD();
 
-        // Reset fleet and powerups
-        this.player.firePower = 1;
-        this.player.weaponType = 'normal';
-        this.player.missileEnabled = false;
-        this.player.speedLevel = 0;
-        this.player.speed = this.player.baseSpeed;
-
-        this.player.invulnerableTimer = 60; // 1 second of invulnerability at 60fps
+        // 1.5 seconds of invulnerability for better recovery
+        this.player.invulnerableTimer = 90;
 
         if (this.lives <= 0) {
             this.triggerGameOver();
@@ -580,5 +585,28 @@ class Game {
             shipIcon.className = 'life-ship';
             this.livesElement.appendChild(shipIcon);
         }
+    }
+
+    // TikFinity / Manual Spawning Helpers
+    spawnEnemy(type) {
+        this.enemies.push(new Enemy(this, type));
+    }
+
+    spawnObstacle() {
+        this.obstacles.push(new Obstacle(this));
+    }
+
+    spawnBarrel() {
+        this.barrels.push(new Barrel(this));
+    }
+
+    spawnGate(modifier) {
+        let xPos = Math.random() * (this.width - 120);
+        this.gates.push(new Gate(this, xPos, modifier));
+    }
+
+    forceBossSpawn(index) {
+        let BossClass = this.bossClasses[index % this.bossClasses.length];
+        this.midbosses.push(new BossClass(this));
     }
 }

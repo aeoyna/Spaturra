@@ -5,6 +5,8 @@ class AudioManager {
         this.masterGain.gain.value = 0.5; // Master volume
         this.masterGain.connect(this.ctx.destination);
         this.initialized = false;
+        this.bgmOscs = [];
+        this.bgmGain = null;
     }
 
     init() {
@@ -186,5 +188,60 @@ class AudioManager {
 
         osc.start(startTime);
         osc.stop(startTime + duration);
+    }
+
+    // --- BGM System (Procedural) ---
+    startBGM() {
+        if (!this.initialized || this.bgmOscs.length > 0) return;
+
+        this.bgmGain = this.ctx.createGain();
+        this.bgmGain.gain.value = 0.15; // Lower volume for BGM
+        this.bgmGain.connect(this.masterGain);
+
+        const now = this.ctx.currentTime;
+        const tempo = 140;
+        const quarterNote = 60 / tempo;
+
+        // Simple 4-bar bass/lead loop
+        const scheduleNote = (freq, type, time, dur, vol = 0.5) => {
+            const osc = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, time);
+            g.gain.setValueAtTime(0, time);
+            g.gain.linearRampToValueAtTime(vol, time + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+            osc.connect(g);
+            g.connect(this.bgmGain);
+            osc.start(time);
+            osc.stop(time + dur);
+            this.bgmOscs.push(osc);
+        };
+
+        const loop = () => {
+            const startTime = this.ctx.currentTime + 0.1;
+            for (let i = 0; i < 16; i++) {
+                const time = startTime + i * (quarterNote / 2);
+                // Bass (Pulse)
+                const bassFreq = i % 8 < 4 ? 55 : 48.99; // A1 to G1
+                if (i % 2 === 0) scheduleNote(bassFreq, 'square', time, 0.2, 0.4);
+
+                // Beep melody (Techno vibe)
+                if (i === 0 || i === 3 || i === 6 || i === 10 || i === 13) {
+                    const melFreq = i % 8 < 4 ? 440 : 392; // A4 to G4
+                    scheduleNote(melFreq, 'sine', time, 0.1, 0.3);
+                }
+            }
+            // Schedule next loop
+            this.bgmTimer = setTimeout(loop, (quarterNote * 8) * 1000);
+        };
+
+        loop();
+    }
+
+    stopBGM() {
+        if (this.bgmTimer) clearTimeout(this.bgmTimer);
+        this.bgmOscs.forEach(osc => { try { osc.stop(); } catch (e) { } });
+        this.bgmOscs = [];
     }
 }

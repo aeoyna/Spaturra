@@ -37,6 +37,21 @@ class Bullet {
             this.radius = 13;
             this.pierceCount = 99; // Doesn't get cancelled by enemies; explosion handled in game.js
             this.color = '#ff2244';
+        } else if (this.type === 'boss-laser') {
+            this.width = 60;
+            this.height = 800;
+            this.pierceCount = 99;
+            this.duration = 300; // 5 seconds at 60fps
+            this.timer = 0;
+        } else if (this.type === 'boss-bomb') {
+            this.width = 24;
+            this.height = 24;
+            this.radius = 12;
+            this.pierceCount = 1;
+        } else if (this.type === 'boss-missile') {
+            this.width = 8;
+            this.height = 16;
+            this.pierceCount = 1;
         } else {
             this.width = isPlayerBullet ? 4 : 4;
             this.height = isPlayerBullet ? 20 : 10;
@@ -88,13 +103,22 @@ class Bullet {
             }
 
             // Spawn smoke trail for missiles
-            if (this.game && Math.random() < 0.4) {
+            // Spawn smoke trail for missiles (reduced frequency)
+            if (this.game && Math.random() < 0.1) {
                 this.game.particles.push(new Particle(this.game, this.x + this.width / 2, this.y + this.height / 2, 'smoke'));
             }
         }
 
+        if (this.type === 'boss-laser') {
+            this.timer++;
+            if (this.timer >= this.duration) {
+                this.markedForDeletion = true;
+            }
+            // Laser doesn't move conventionally
+        }
+
         // Cleanup if off screen
-        if (this.x > 600 || this.x < 0 || this.y > 800 || this.y < 0) {
+        if (this.x > 800 || this.x < -200 || this.y > 1000 || this.y < -200) {
             this.markedForDeletion = true;
         }
     }
@@ -108,8 +132,8 @@ class Bullet {
 
         ctx.translate(cx, cy);
 
-        // Rotate to face direction of travel (except for circular ones like ripple/bubble)
-        if (this.type !== 'ripple' && this.type !== 'bubble') {
+        // Rotate to face direction of travel (except for circular ones or stationary-vertical ones)
+        if (this.type !== 'ripple' && this.type !== 'bubble' && this.type !== 'boss-laser') {
             const angle = Math.atan2(this.speedY, this.speedX);
             ctx.rotate(angle + Math.PI / 2); // Adjust so "up" is 0 velocity
         }
@@ -209,6 +233,41 @@ class Bullet {
             ctx.globalAlpha = 0.7;
             ctx.beginPath();
             ctx.arc(-4, -4, 4, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (this.type === 'boss-laser') {
+            // Thick restriction laser
+            ctx.globalAlpha = 0.6 + Math.sin(Date.now() / 50) * 0.2;
+            let grad = ctx.createLinearGradient(-this.width / 2, 0, this.width / 2, 0);
+            grad.addColorStop(0, 'rgba(255, 0, 0, 0)');
+            grad.addColorStop(0.5, this.color);
+            grad.addColorStop(1, 'rgba(255, 0, 0, 0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+
+            // White core
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(-this.width / 8, -this.height / 2, this.width / 4, this.height);
+        } else if (this.type === 'boss-bomb') {
+            // Gravity bomb
+            ctx.shadowBlur = 20;
+            ctx.fillStyle = '#ffaa00';
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+            // Pulsing center
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius * 0.5 * (1 + Math.sin(Date.now() / 100) * 0.2), 0, Math.PI * 2);
+            ctx.fill();
+        } else if (this.type === 'boss-missile') {
+            // Desarium missile
+            ctx.fillStyle = '#444';
+            ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+            ctx.fillStyle = '#00ffff';
+            ctx.beginPath();
+            ctx.moveTo(-this.width / 2, -this.height / 2);
+            ctx.lineTo(0, -this.height / 2 - 4);
+            ctx.lineTo(this.width / 2, -this.height / 2);
             ctx.fill();
         } else {
             const w = this.width;

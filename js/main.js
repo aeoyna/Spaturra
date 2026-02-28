@@ -15,6 +15,10 @@ window.addEventListener('load', () => {
     let animationId;
     let isPlaying = false;
 
+    // TikFinity Integration
+    const tikfinityManager = new TikFinityManager();
+    tikfinityManager.init();
+
     // FPS Capping variables
     let lastTime = 0;
     const fps = 48; // Reduced to 80% (original 60)
@@ -23,9 +27,11 @@ window.addEventListener('load', () => {
     // Reset game state
     function initGame() {
         audioManager.init(); // Initialize audio context on user gesture
+        audioManager.startBGM(); // Start background music
         game = new Game(canvas.width, canvas.height, audioManager);
         game.updateLivesHUD(); // Initial HUD render
         scoreElement.innerText = 'Score: 0';
+        tikfinityManager.setGame(game);
         isPlaying = true;
 
         startScreen.classList.add('hidden');
@@ -42,6 +48,7 @@ window.addEventListener('load', () => {
             animationId = requestAnimationFrame(animate);
         } else {
             isPlaying = false;
+            audioManager.stopBGM(); // Stop background music
             // Auto-restart after 2 seconds
             setTimeout(() => {
                 if (!isPlaying) {
@@ -71,6 +78,10 @@ window.addEventListener('load', () => {
 
             // Draw scene
             game.draw(ctx);
+
+            // TikFinity notifications overlay
+            tikfinityManager.updateNotifications();
+            tikfinityManager.drawNotifications(ctx, canvas.width);
         }
     }
 
@@ -110,6 +121,8 @@ window.addEventListener('load', () => {
     // Initial draw to show something before start
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+
 
     // Draw initial starfield statically
     ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
